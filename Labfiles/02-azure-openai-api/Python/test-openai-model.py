@@ -25,6 +25,9 @@ def main():
         I will also share an interesting fact about the local nature on the hikes when making a recommendation.
         """
         
+        # Initialize the conversation history
+        conversation_history = [{"role": "system", "content": system_message}]
+        
         while True:
             # Get input text
             input_text = input("Enter the prompt (or type 'quit' to exit): ")
@@ -33,42 +36,27 @@ def main():
             if len(input_text) == 0:
                 print("Please enter a prompt.")
                 continue
+            
             print("\nSending request for summary to Azure OpenAI endpoint...\n\n")
             
-            # Initialize messages array
-            messages_array = [{"role": "system", "content": system_message}]
+            # Add the user's message to the conversation history
+            conversation_history.append({"role": "user", "content": input_text})
             
-            # Add code to send request...
             # Send request to Azure OpenAI model
-            messages_array.append({"role": "user", "content": input_text})
             response = client.chat.completions.create(
                 model=azure_oai_deployment,
                 temperature=0.7,
                 max_tokens=1200,
-                messages=messages_array
+                messages=conversation_history
             )
+            
             generated_text = response.choices[0].message.content
             
-            # Add generated text to messages array
-            messages_array.append({"role": "assistant", "content": generated_text})
+            # Add the assistant's response to the conversation history
+            conversation_history.append({"role": "assistant", "content": generated_text})
             
-            # Print generated text
+            # Print the generated text
             print("Summary: " + generated_text + "\n")
-            
-            # Send request to Azure OpenAI model
-            response = client.chat.completions.create(
-                model=azure_oai_deployment,
-                temperature=0.7,
-                max_tokens=400,
-                messages=[
-                    {"role": "system", "content": system_message},
-                    {"role": "user", "content": input_text}
-                ]
-            )
-            generated_text = response.choices[0].message.content
-            
-            # Print the response
-            print("Response: " + generated_text + "\n")
     
     except Exception as ex:
         print(ex)
